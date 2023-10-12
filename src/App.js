@@ -1,25 +1,52 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useReducer } from 'react';
+import Headers from './Header';
+import Main from './Main';
+import Loader from './Loader';
+import Error from './Error';
+import StartScreen from './StartScreen';
 
-function App() {
+const initialState = {
+  questions: [],
+
+  // 'loading','error','ready','active','finished'
+  status: 'loading',
+};
+function reducer(state, action) {
+  switch (action.type) {
+    case 'dataReceived':
+      return { ...state, questions: action.payload, status: 'ready' };
+    case 'dataFailed':
+      return { ...state, status: 'error', errorMessage: action.payload };
+    default:
+      throw new Error('Fucking Awful Error Broke out!');
+  }
+}
+export default function App() {
+  const [{ questions, status }, dispatch] = useReducer(reducer, initialState);
+
+  // const [state, dispatch] = useReducer(reducer, initialState);
+  // const { questions, status } = state;
+  const numberOfQuestions = questions.length ?? 0;
+  useEffect(function () {
+    fetch('http://localhost:8000/questions')
+      .then((res) => res.json())
+      .then((data) => dispatch({ type: 'dataReceived', payload: data }))
+      .catch((err) => dispatch({ type: 'dataFailed', payload: err.message }));
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <Headers />
+      <Main>
+        {status === 'loading' && <Loader />}
+        {status === 'error' && <Error />}
+        {status === 'ready' && (
+          <StartScreen questionsNumber={numberOfQuestions} />
+        )}
+
+        <p>1/15</p>
+        <p>Question?</p>
+      </Main>
     </div>
   );
 }
-
-export default App;
