@@ -4,6 +4,7 @@ import Main from './Main';
 import Loader from './Loader';
 import Error from './Error';
 import StartScreen from './StartScreen';
+import Question from './Question';
 
 const initialState = {
   questions: [],
@@ -17,6 +18,8 @@ function reducer(state, action) {
       return { ...state, questions: action.payload, status: 'ready' };
     case 'dataFailed':
       return { ...state, status: 'error', errorMessage: action.payload };
+    case 'start':
+      return { ...state, status: 'active' };
     default:
       throw new Error('Fucking Awful Error Broke out!');
   }
@@ -33,7 +36,9 @@ export default function App() {
       .then((data) => dispatch({ type: 'dataReceived', payload: data }))
       .catch((err) => dispatch({ type: 'dataFailed', payload: err.message }));
   }, []);
-
+  // function handleStart() {
+  //   dispatch({ type: 'start' });
+  // }
   return (
     <div className="app">
       <Headers />
@@ -41,9 +46,13 @@ export default function App() {
         {status === 'loading' && <Loader />}
         {status === 'error' && <Error />}
         {status === 'ready' && (
-          <StartScreen questionsNumber={numberOfQuestions} />
+          <StartScreen
+            questionsNumber={numberOfQuestions}
+            // onClick={handleStart}
+            dispatch={dispatch}
+          />
         )}
-
+        {status === 'active' && <Question />}
         <p>1/15</p>
         <p>Question?</p>
       </Main>
